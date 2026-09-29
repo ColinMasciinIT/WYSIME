@@ -1,0 +1,12 @@
+node_modules/
+dist/
+coverage/
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+PRE_PUBLICATION_REVIEW.md
+VALIDATION_STATUS.md
+GITHUB_PUBLICATION.md
+TODO

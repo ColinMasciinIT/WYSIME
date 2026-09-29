@@ -1,0 +1,62 @@
+{
+  "name": "wysime",
+  "version": "0.1.0",
+  "description": "WYSIME (What You See Is Markdown Editor) - a lightweight, framework-free Markdown WYSIWYG editor written in Vanilla JavaScript.",
+  "type": "module",
+  "main": "./dist/wysime.umd.cjs",
+  "module": "./dist/wysime.js",
+  "types": "./types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "import": "./dist/wysime.js",
+      "require": "./dist/wysime.umd.cjs"
+    },
+    "./style.css": "./dist/wysime.css"
+  },
+  "files": [
+    "dist",
+    "types",
+    "README.md",
+    "LICENSE",
+    "AUTHORS.md",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "preview": "vite preview --host 0.0.0.0",
+    "prepublishOnly": "npm test && npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ColinMasciinIT/WYSIME.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ColinMasciinIT/WYSIME/issues"
+  },
+  "homepage": "https://github.com/ColinMasciinIT/WYSIME#readme",
+  "keywords": [
+    "wysime",
+    "markdown",
+    "wysiwyg",
+    "editor",
+    "vanilla-javascript",
+    "contenteditable"
+  ],
+  "author": "Colin Timaxian",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "dependencies": {
+    "dompurify": "^3.4.16"
+  },
+  "devDependencies": {
+    "jsdom": "^29.1.1",
+    "vite": "^8.3.1",
+    "vitest": "^5.0.2"
+  }
+}
