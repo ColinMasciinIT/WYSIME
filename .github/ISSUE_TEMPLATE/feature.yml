@@ -1,0 +1,23 @@
+name: Feature request
+description: Propose a focused editor capability
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: usecase
+    attributes:
+      label: Use case
+      description: Which concrete editing workflow should improve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+    validations:
+      required: true
+  - type: textarea
+    id: markdown
+    attributes:
+      label: Expected Markdown representation
+      description: Show the canonical Markdown format if applicable.
