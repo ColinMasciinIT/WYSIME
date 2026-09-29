@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="WYSIME - What You See Is Markdown Editor - bilingual demo">
+  <title>WYSIME - Demo</title>
+  <script type="module" src="/demo/main.js"></script>
+</head>
+<body>
+  <main class="demo-page">
+    <header class="demo-header">
+      <div>
+        <span class="demo-kicker" id="demo-kicker">WYSIME · Open Source</span>
+        <h1>WYSIME</h1>
+        <p id="demo-intro"><strong>What You See Is Markdown Editor</strong> - un éditeur Markdown WYSIWYG léger et sans framework d'édition.</p>
+      </div>
+      <div class="demo-header-side">
+        <div class="demo-language" role="group" aria-label="Language / Langue">
+          <button type="button" data-locale="fr" class="is-active" aria-pressed="true">FR</button>
+          <button type="button" data-locale="en" aria-pressed="false">EN</button>
+        </div>
+        <div class="demo-badges" id="demo-badges" aria-label="Caractéristiques">
+          <span>Vanilla JS</span><span>Markdown-first</span><span>Upload-ready</span>
+        </div>
+      </div>
+    </header>
+
+    <section class="demo-grid">
+      <div class="demo-panel demo-panel-editor">
+        <div class="demo-panel-header">
+          <strong id="editor-label">Éditeur</strong>
+          <div class="demo-actions">
+            <button id="load-example" type="button">Recharger l'exemple</button>
+            <button id="toggle-readonly" type="button">Mode lecture</button>
+          </div>
+        </div>
+        <textarea id="editor-source"></textarea>
+      </div>
+
+      <aside class="demo-panel demo-panel-source">
+        <div class="demo-panel-header"><strong id="markdown-label">Markdown généré</strong><span id="char-count">0 caractères</span></div>
+        <pre id="markdown-output"></pre>
+      </aside>
+    </section>
+
+    <section class="demo-note" id="demo-note">
+      <strong>Images :</strong> cette démo les convertit en Data URL uniquement pour fonctionner sans serveur. En production, fournissez votre propre fonction <code>uploadImage(file)</code>.
+    </section>
+  </main>
+</body>
+</html>
