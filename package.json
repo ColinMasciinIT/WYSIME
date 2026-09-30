@@ -1,6 +1,6 @@
 {
   "name": "wysime",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "WYSIME (What You See Is Markdown Editor) - a lightweight, framework-free Markdown WYSIWYG editor written in Vanilla JavaScript.",
   "type": "module",
   "main": "./dist/wysime.umd.cjs",
@@ -37,14 +37,20 @@
   "bugs": {
     "url": "https://github.com/ColinMasciinIT/WYSIME/issues"
   },
-  "homepage": "https://github.com/ColinMasciinIT/WYSIME#readme",
+  "homepage": "https://wysime.com",
   "keywords": [
     "wysime",
     "markdown",
     "wysiwyg",
     "editor",
     "vanilla-javascript",
-    "contenteditable"
+    "contenteditable",
+    "markdown-editor",
+    "wysiwyg-editor",
+    "markdown-wysiwyg",
+    "rich-text-editor",
+    "browser",
+    "javascript"
   ],
   "author": "Colin Timaxian",
   "license": "MIT",

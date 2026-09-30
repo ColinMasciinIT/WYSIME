@@ -559,6 +559,31 @@
   font-size: 0.9rem;
 }
 
+.wysime-markdown-preview-wrap {
+  display: grid;
+  gap: 10px;
+}
+
+.wysime-markdown-preview {
+  width: 100%;
+  min-height: 320px;
+  box-sizing: border-box;
+  resize: vertical;
+  padding: 12px 14px;
+  border: 1px solid var(--wysime-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--wysime-bg) 94%, var(--wysime-text));
+  color: var(--wysime-text);
+  font: 0.88rem/1.55 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  white-space: pre;
+  tab-size: 2;
+}
+
+.wysime-markdown-preview:focus {
+  outline: 2px solid color-mix(in srgb, var(--wysime-accent) 38%, transparent);
+  outline-offset: 1px;
+}
+
 .wysime-hidden {
   display: none !important;
 }

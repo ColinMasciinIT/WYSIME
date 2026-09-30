@@ -1,8 +1,22 @@
 # WYSIME
 
 > **What You See Is Markdown Editor**
->
 > A lightweight, framework-free Markdown WYSIWYG editor written in Vanilla JavaScript.
+
+[![npm version](https://img.shields.io/npm/v/wysime.svg)](https://www.npmjs.com/package/wysime)
+[![npm downloads](https://img.shields.io/npm/dm/wysime.svg)](https://www.npmjs.com/package/wysime)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+**[Live Demo](https://wysime.com/#demo)** ·
+**[npm](https://www.npmjs.com/package/wysime)** ·
+**[Documentation](./docs/INTEGRATION.md)** ·
+**[Report a bug](https://github.com/ColinMasciinIT/WYSIME/issues)**
+
+<p align="center">
+  <img src="./assets/Tuto_WYSIME.gif"
+       alt="WYSIME Markdown WYSIWYG editor demo"
+       width="900">
+</p>
 
 WYSIME is a Markdown-first editor designed and created by **Colin Timaxian**. It provides a rich WYSIWYG editing surface while keeping Markdown as the canonical stored format.
 
@@ -10,7 +24,7 @@ The standalone library is deliberately host-agnostic: it contains no application
 
 ## Status
 
-`0.1.0` is the initial public preview of WYSIME.
+`0.1.1` is a patch release of WYSIME that adds a toolbar action for inspecting the generated Markdown in a dedicated modal.
 
 The editor is usable, but the API and Markdown serialization rules may still evolve during the `0.x` series.
 
@@ -32,6 +46,7 @@ The editor is usable, but the API and Markdown serialization rules may still evo
 - DOMPurify sanitization plus URL/style restrictions.
 - Read-only mode.
 - Responsive toolbar.
+- Dedicated toolbar button to inspect the generated Markdown in a modal.
 - French and English interface through `locale: "fr" | "en"`.
 - Bilingual French/English demo.
 - No hard-coded backend.
@@ -39,7 +54,7 @@ The editor is usable, but the API and Markdown serialization rules may still evo
 
 ## Installation
 
-The intended npm package name is currently `wysime` and must be verified before the first npm publication.
+The npm package name is currently `wysime` : https://www.npmjs.com/package/wysime
 
 ```bash
 npm install wysime
@@ -296,7 +311,7 @@ The goal is to keep the editing layer inspectable and lightweight while retainin
 
 HTML sanitization is security-sensitive. Instead of reimplementing an HTML sanitizer, WYSIME isolates that responsibility in DOMPurify. See [`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md).
 
-## Known limitations in 0.1.0
+## Known limitations in 0.1.1
 
 - The parser targets the documented editorial subset, not every CommonMark/GFM edge case.
 - Complex nested inline formatting may normalize during a WYSIWYG round trip.
