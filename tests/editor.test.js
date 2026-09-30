@@ -179,11 +179,35 @@ describe("WYSIMEditor", () => {
     editor.destroy();
   });
 
+
+  it("opens a modal with the generated Markdown from the toolbar", async () => {
+    document.body.innerHTML = '<textarea id="source"># Title\n\n**Bold** and `code`</textarea>';
+    const editor = new WYSIMEditor("#source");
+
+    const button = editor.toolbar.querySelector('[data-action="markdown-preview"]');
+    expect(button).not.toBeNull();
+    expect(button.querySelector("svg")).not.toBeNull();
+
+    button.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }));
+    button.click();
+    await nextTick();
+
+    const dialog = document.querySelector(".wysime-markdown-dialog");
+    expect(dialog).not.toBeNull();
+    expect(dialog.querySelector("[data-markdown-preview]").value).toBe(editor.getMarkdown());
+
+    dialog.querySelector("[data-confirm]").click();
+    await nextTick();
+    expect(document.querySelector(".wysime-markdown-dialog")).toBeNull();
+    editor.destroy();
+  });
+
   it("can render the editor interface in English", () => {
     document.body.innerHTML = '<textarea id="source"></textarea>';
     const editor = new WYSIMEditor("#source", { locale: "en" });
     expect(editor.toolbar.getAttribute("aria-label")).toBe("Content formatting");
     expect(editor.toolbar.querySelector('[data-action="table"]').getAttribute("title")).toBe("Insert table");
+    expect(editor.toolbar.querySelector('[data-action="markdown-preview"]').getAttribute("title")).toBe("View generated Markdown");
     expect(editor.editor.dataset.placeholder).toBe("Start writing…");
     editor.destroy();
   });

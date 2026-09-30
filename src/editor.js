@@ -26,6 +26,7 @@ import {
   openCalloutDialog,
   openStepsDialog,
   openImagePropertiesDialog,
+  openMarkdownPreviewDialog,
   showErrorDialog
 } from "./dialogs.js";
 import { getMessages } from "./i18n.js";
@@ -98,6 +99,7 @@ function toolbarHtml({ images = true, messages = getMessages("fr") } = {}) {
       <button type="button" data-action="link" title="${escapeAttribute(t.link)}" aria-label="${escapeAttribute(t.link)}">${icons.link}</button>
       <button type="button" data-action="callout" title="${escapeAttribute(t.callout)}" aria-label="${escapeAttribute(t.callout)}">${icons.callout}</button>
       <button type="button" data-action="steps" title="${escapeAttribute(t.steps)}" aria-label="${escapeAttribute(t.steps)}">${icons.steps}</button>
+      <button type="button" data-action="markdown-preview" title="${escapeAttribute(t.markdownPreview)}" aria-label="${escapeAttribute(t.markdownPreview)}">${icons.markdown}</button>
 
       <button type="button" class="wysime-toolbar-mobile-toggle" data-mobile-toggle title="${escapeAttribute(t.moreTools)}" aria-label="${escapeAttribute(t.moreTools)}" aria-expanded="false">${icons.chevron}</button>
     </div>`;
@@ -379,6 +381,11 @@ export class WYSIMEditor {
   async runAction(action, range = this.cloneSavedRange()) {
     const actionRange = range?.cloneRange?.() || range;
     const selection = actionRange?.toString() || "";
+
+    if (action === "markdown-preview") {
+      await openMarkdownPreviewDialog(this.getMarkdown(), { locale: this.options.locale });
+      return;
+    }
 
     if (action === "task") {
       this.savedRange = insertTask(this.editor, actionRange, selection || this.messages.placeholders.task);

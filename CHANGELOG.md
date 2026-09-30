@@ -2,6 +2,12 @@
 
 All notable WYSIME releases are documented in this file.
 
+## 0.1.1 - 2026-09-30
+
+### Features
+
+- Added a toolbar button with a dedicated SVG icon to inspect the generated Markdown in a read-only modal.
+
 ## 0.1.0 - 2026-09-28
 
 ### Features
