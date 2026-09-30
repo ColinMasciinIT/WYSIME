@@ -31,8 +31,8 @@ export function openDialog({ title, body, confirmLabel = "Insert", cancelLabel =
         </div>
         <div class="wysime-dialog-body">${body}</div>
         <div class="wysime-dialog-actions">
-          <button type="button" class="wysime-button wysime-button-secondary" data-cancel>${escapeHtml(cancelLabel)}</button>
-          <button type="button" class="wysime-button wysime-button-primary" data-confirm>${escapeHtml(confirmLabel)}</button>
+          ${cancelLabel ? `<button type="button" class="wysime-button wysime-button-secondary" data-cancel>${escapeHtml(cancelLabel)}</button>` : ""}
+          ${confirmLabel ? `<button type="button" class="wysime-button wysime-button-primary" data-confirm>${escapeHtml(confirmLabel)}</button>` : ""}
         </div>
       </form>`;
 
@@ -42,8 +42,8 @@ export function openDialog({ title, body, confirmLabel = "Insert", cancelLabel =
     };
 
     dialog.querySelector(".wysime-dialog-close").addEventListener("click", () => finish(null));
-    dialog.querySelector("[data-cancel]").addEventListener("click", () => finish(null));
-    dialog.querySelector("[data-confirm]").addEventListener("click", () => finish(dialog));
+    dialog.querySelector("[data-cancel]")?.addEventListener("click", () => finish(null));
+    dialog.querySelector("[data-confirm]")?.addEventListener("click", () => finish(dialog));
     dialog.addEventListener("cancel", (event) => {
       event.preventDefault();
       finish(null);
@@ -55,6 +55,29 @@ export function openDialog({ title, body, confirmLabel = "Insert", cancelLabel =
     openNativeDialog(dialog);
     if (typeof onMount === "function") onMount(dialog);
     queueMicrotask(() => dialog.querySelector("input,select,textarea,button")?.focus());
+  });
+}
+
+export async function openMarkdownPreviewDialog(markdown = "", { locale = "fr" } = {}) {
+  const messages = getMessages(locale);
+  await openDialog({
+    title: messages.markdownPreview.title,
+    confirmLabel: messages.common.close,
+    cancelLabel: null,
+    className: "wysime-markdown-dialog",
+    locale,
+    body: `
+      <div class="wysime-markdown-preview-wrap">
+        <p class="wysime-dialog-help">${escapeHtml(messages.markdownPreview.help)}</p>
+        <textarea class="wysime-markdown-preview" data-markdown-preview readonly spellcheck="false" aria-label="${escapeAttribute(messages.markdownPreview.aria)}">${escapeHtml(markdown)}</textarea>
+      </div>`,
+    onMount(dialog) {
+      const preview = dialog.querySelector("[data-markdown-preview]");
+      if (preview) {
+        preview.focus();
+        preview.setSelectionRange(0, 0);
+      }
+    }
   });
 }
 
