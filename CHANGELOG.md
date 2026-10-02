@@ -2,6 +2,18 @@
 
 All notable WYSIME releases are documented in this file.
 
+## [0.2.5] - 2026-10-02
+
+### Fixed
+
+- Stabilized the asynchronous MathLive equation dialog test in GitHub Actions.
+- Replaced timing-dependent assertions with deterministic asynchronous waiting using `vi.waitFor`.
+- GitHub Actions matrix jobs now use `fail-fast: false` so Node.js 20 and Node.js 22 complete independently.
+
+### Changed
+
+- Improved CI reliability for the equation dialog tests.
+
 ## 0.2.4 - 2026-10-02
 
 ### Fixes
