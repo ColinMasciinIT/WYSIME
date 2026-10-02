@@ -46,9 +46,31 @@ export interface CalloutDialogResult {
   content: string;
 }
 
+export interface VisualRuntimeOptions {
+  mathlive?: string;
+  katex?: string;
+  katexCss?: string;
+  vegaEmbed?: string;
+  mermaid?: string;
+}
+
+export interface EquationDialogResult {
+  latex: string;
+  display?: boolean;
+}
+
+export interface VisualDialogResult {
+  kind: "chart" | "mermaid";
+  source: string;
+}
+
 export interface EditorOptions {
   locale?: "fr" | "en";
   images?: boolean;
+  equations?: boolean;
+  charts?: boolean;
+  diagrams?: boolean;
+  visualRuntime?: VisualRuntimeOptions;
   uploadImage?: (file: File, editor: WYSIMEditor) => Promise<string | ImageUploadResult>;
   maxImageBytes?: number;
   acceptedImageTypes?: string[];
@@ -64,6 +86,8 @@ export interface EditorOptions {
   codeDialog?: (selection: string, options: { locale: "fr" | "en" }) => Promise<CodeDialogResult | null>;
   calloutDialog?: (selection: string, options: { locale: "fr" | "en" }) => Promise<CalloutDialogResult | null>;
   stepsDialog?: (selection: string, options: { locale: "fr" | "en" }) => Promise<string[] | null>;
+  equationDialog?: (selection: string, options: { locale: "fr" | "en"; visualRuntime: VisualRuntimeOptions; display?: boolean; mode?: "insert" | "edit" }) => Promise<EquationDialogResult | null>;
+  visualDialog?: (options: { locale: "fr" | "en"; visualRuntime: VisualRuntimeOptions }) => Promise<VisualDialogResult | null>;
 }
 
 export interface MarkdownRenderOptions {
@@ -83,6 +107,7 @@ export class WYSIMEditor {
   getHtml(): string;
   insertMarkdown(markdown: string): this;
   insertHtml(html: string): this;
+  hydrateVisuals(): Promise<this>;
   focus(): this;
   setReadOnly(readOnly?: boolean): this;
   destroy(): void;
@@ -99,3 +124,7 @@ export function isAllowedLinkUrl(value: string, options?: SanitizerOptions): boo
 export function isAllowedImageUrl(value: string, options?: SanitizerOptions): boolean;
 export const DEFAULT_SANITIZE_OPTIONS: Readonly<Required<SanitizerOptions>>;
 export function fileToDataUrl(file: File): Promise<string | ArrayBuffer | null>;
+
+export const DEFAULT_VISUAL_RUNTIME: Readonly<Required<VisualRuntimeOptions>>;
+export function parseNaturalChart(source: string): Record<string, unknown>;
+export function hydrateVisuals(root: Element, options?: { equations?: boolean; charts?: boolean; diagrams?: boolean; visualRuntime?: VisualRuntimeOptions; locale?: "fr" | "en" }): Promise<void>;

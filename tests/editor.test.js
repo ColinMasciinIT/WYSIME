@@ -202,6 +202,33 @@ describe("WYSIMEditor", () => {
     editor.destroy();
   });
 
+
+  it("edits an existing block equation from its pencil control without polluting output", async () => {
+    document.body.innerHTML = '<textarea id="source">$$\nx^2\n$$</textarea>';
+    const katexModule = 'export default { renderToString(value) { return `<span class="fake-katex">${value}</span>`; } };';
+    const katexUrl = `data:text/javascript,${encodeURIComponent(katexModule)}`;
+    const equationDialog = vi.fn(async () => ({ latex: "y=2x", display: true }));
+    const editor = new WYSIMEditor("#source", {
+      equationDialog,
+      visualRuntime: { katex: katexUrl, katexCss: "" }
+    });
+
+    await editor.hydrateVisuals();
+    const editButton = editor.editor.querySelector("[data-wysime-edit-math]");
+    expect(editButton).not.toBeNull();
+    expect(editor.getHtml()).not.toContain("data-wysime-edit-math");
+
+    editButton.click();
+    await nextTick();
+    await nextTick();
+
+    expect(equationDialog).toHaveBeenCalled();
+    expect(equationDialog.mock.calls[0][0]).toBe("x^2");
+    expect(equationDialog.mock.calls[0][1]).toMatchObject({ display: true, mode: "edit" });
+    expect(editor.getMarkdown()).toBe("$$\ny=2x\n$$");
+    editor.destroy();
+  });
+
   it("can render the editor interface in English", () => {
     document.body.innerHTML = '<textarea id="source"></textarea>';
     const editor = new WYSIMEditor("#source", { locale: "en" });

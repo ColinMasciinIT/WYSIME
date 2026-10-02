@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 import { escapeHtml, escapeAttribute, sanitizeHtml, isAllowedImageUrl, isAllowedLinkUrl } from "./sanitize.js";
+import { createMathPlaceholder, createVisualPlaceholder } from "./visuals.js";
 
 const CALLOUTS = {
   info: { title: "Information", className: "info" },
@@ -53,6 +54,10 @@ export function renderInline(value, options = {}) {
   let text = String(value ?? "");
 
   text = renderControlledInlineHtml(text, tokens, options);
+
+  if (options.equations !== false) {
+    text = text.replace(/(^|[^\\])\$([^$\n]+?)\$/g, (_, prefix, latex) => `${prefix}${tokens.put(createMathPlaceholder(latex.trim(), false))}`);
+  }
 
   text = text.replace(/`([^`\n]+)`/g, (_, code) => tokens.put(`<code>${escapeHtml(code)}</code>`));
 
@@ -190,6 +195,7 @@ function startsBlock(lines, index) {
   const next = lines[index + 1] ?? "";
   if (!line.trim()) return true;
   if (/^```/.test(line.trim())) return true;
+  if (/^\$\$\s*$/.test(line.trim())) return true;
   if (/^:::[a-zA-Z]/.test(line.trim())) return true;
   if (/^#{1,4}\s+/.test(line)) return true;
   if (/^>\s?/.test(line)) return true;
@@ -213,6 +219,18 @@ function renderBlocks(markdown, options = {}) {
       continue;
     }
 
+    if (options.equations !== false && /^\$\$\s*$/.test(line.trim())) {
+      const latex = [];
+      index += 1;
+      while (index < lines.length && !/^\$\$\s*$/.test(lines[index].trim())) {
+        latex.push(lines[index]);
+        index += 1;
+      }
+      if (index < lines.length) index += 1;
+      output.push(createMathPlaceholder(latex.join("\n").trim(), true));
+      continue;
+    }
+
     const fence = line.trim().match(/^```([A-Za-z0-9_-]*)\s*$/);
     if (fence) {
       const code = [];
@@ -222,8 +240,16 @@ function renderBlocks(markdown, options = {}) {
         index += 1;
       }
       if (index < lines.length) index += 1;
-      const language = fence[1] ? ` class="language-${escapeAttribute(fence[1])}"` : "";
-      output.push(`<pre><code${language}>${escapeHtml(code.join("\n"))}</code></pre>`);
+      const languageName = (fence[1] || "").toLowerCase();
+      const source = code.join("\n");
+      if (languageName === "chart" && options.charts !== false) {
+        output.push(createVisualPlaceholder("chart", source));
+      } else if (languageName === "mermaid" && options.diagrams !== false) {
+        output.push(createVisualPlaceholder("mermaid", source));
+      } else {
+        const language = fence[1] ? ` class="language-${escapeAttribute(fence[1])}"` : "";
+        output.push(`<pre><code${language}>${escapeHtml(source)}</code></pre>`);
+      }
       continue;
     }
 

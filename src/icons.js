@@ -15,5 +15,7 @@ export const icons = {
   markdown: icon('<rect x="2.5" y="4" width="13" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M4.7 11V7l2.1 2 2.1-2v4M11 8.5h3M12.5 7v3" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>'),
   callout: icon('<path d="M4 3h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-4 3v-3H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M9 6v3M9 11h.01" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>'),
   steps: icon('<circle cx="4" cy="5" r="1.5" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="4" cy="13" r="1.5" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M7 5h8M7 13h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'),
-  quote: icon('<path d="M4 5h4v4H5.5A3.5 3.5 0 0 1 4 12M11 5h4v4h-2.5a3.5 3.5 0 0 1-1.5 3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>')
+  quote: icon('<path d="M4 5h4v4H5.5A3.5 3.5 0 0 1 4 12M11 5h4v4h-2.5a3.5 3.5 0 0 1-1.5 3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>'),
+  equation: icon('<path d="M14.8 3H6.2L3 9l3.2 6h8.6M7 6.2h5M7 11.8h5" fill="none" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/>'),
+  visual: icon('<path d="M3 14V9h3v5M7.5 14V5h3v9M12 14V7.5h3V14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M2 15.2h14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>')
 };
