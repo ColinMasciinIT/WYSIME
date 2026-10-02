@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { openEquationDialog } from "../src/dialogs.js";
 
 async function nextTick() {
@@ -43,15 +43,21 @@ describe("equation dialog", () => {
       display: true,
       mode: "edit"
     });
-    await nextTick();
-    await nextTick();
+    await vi.waitFor(() => {
+      const currentDialog = document.querySelector(".wysime-equation-dialog");
+
+      expect(currentDialog).not.toBeNull();
+      expect(currentDialog.querySelector("[data-math-keyboard-host]")).not.toBeNull();
+      expect(currentDialog.querySelector("[data-math-keyboard-mount]")).not.toBeNull();
+      expect(runtimeModule.mathVirtualKeyboard.shown).toBe(true);
+    }, {
+      timeout: 2000,
+      interval: 20
+    });
 
     const dialog = document.querySelector(".wysime-equation-dialog");
-    const keyboardHost = dialog?.querySelector("[data-math-keyboard-host]");
-    const keyboardMount = dialog?.querySelector("[data-math-keyboard-mount]");
-    expect(dialog).not.toBeNull();
-    expect(keyboardHost).not.toBeNull();
-    expect(keyboardMount).not.toBeNull();
+    const keyboardHost = dialog.querySelector("[data-math-keyboard-host]");
+    const keyboardMount = dialog.querySelector("[data-math-keyboard-mount]");
     expect(runtimeModule.mathVirtualKeyboard.container).toBe(keyboardMount);
     expect(keyboardHost.parentElement).toBe(dialog);
     expect(keyboardHost.closest(".wysime-dialog-body")).toBeNull();
