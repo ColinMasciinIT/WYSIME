@@ -27,12 +27,19 @@ import {
   openStepsDialog,
   openImagePropertiesDialog,
   openMarkdownPreviewDialog,
+  openEquationDialog,
+  openVisualDialog,
   showErrorDialog
 } from "./dialogs.js";
 import { getMessages } from "./i18n.js";
+import { createMathPlaceholder, createVisualPlaceholder, decodeVisualSource, encodeVisualSource, hydrateVisuals } from "./visuals.js";
 
 const DEFAULT_OPTIONS = Object.freeze({
   images: true,
+  equations: true,
+  charts: true,
+  diagrams: true,
+  visualRuntime: {},
   uploadImage: null,
   maxImageBytes: 8 * 1024 * 1024,
   acceptedImageTypes: ["image/png", "image/jpeg", "image/gif", "image/webp"],
@@ -51,7 +58,7 @@ function resolveElement(target) {
   return target instanceof Element ? target : null;
 }
 
-function toolbarHtml({ images = true, messages = getMessages("fr") } = {}) {
+function toolbarHtml({ images = true, equations = true, charts = true, diagrams = true, messages = getMessages("fr") } = {}) {
   const t = messages.toolbar;
   return `
     <div class="wysime-toolbar" role="toolbar" aria-label="${escapeAttribute(t.aria)}">
@@ -94,6 +101,8 @@ function toolbarHtml({ images = true, messages = getMessages("fr") } = {}) {
       </details>
 
       <button type="button" data-action="code-block" title="${escapeAttribute(t.codeBlock)}" aria-label="${escapeAttribute(t.codeBlock)}">${icons.code}</button>
+      ${equations ? `<button type="button" data-action="equation" title="${escapeAttribute(t.equation)}" aria-label="${escapeAttribute(t.equation)}">${icons.equation}</button>` : ""}
+      ${(charts || diagrams) ? `<button type="button" data-action="visual" title="${escapeAttribute(t.visual)}" aria-label="${escapeAttribute(t.visual)}">${icons.visual}</button>` : ""}
       ${images ? `<label class="wysime-upload-button" title="${escapeAttribute(t.image)}" aria-label="${escapeAttribute(t.image)}">${icons.image}<input data-image-input type="file" accept="image/png,image/jpeg,image/gif,image/webp"></label>` : ""}
       <button type="button" data-action="table" title="${escapeAttribute(t.table)}" aria-label="${escapeAttribute(t.table)}">${icons.table}</button>
       <button type="button" data-action="link" title="${escapeAttribute(t.link)}" aria-label="${escapeAttribute(t.link)}">${icons.link}</button>
@@ -175,7 +184,7 @@ export class WYSIMEditor {
 
     this.host = document.createElement("div");
     this.host.className = "wysime-shell";
-    this.host.innerHTML = `${toolbarHtml({ images: this.options.images, messages: this.messages })}<div class="wysime-editor" contenteditable="${this.options.readOnly ? "false" : "true"}" role="textbox" aria-multiline="true" data-placeholder="${escapeAttribute(this.options.placeholder)}"></div>`;
+    this.host.innerHTML = `${toolbarHtml({ images: this.options.images, equations: this.options.equations, charts: this.options.charts, diagrams: this.options.diagrams, messages: this.messages })}<div class="wysime-editor" contenteditable="${this.options.readOnly ? "false" : "true"}" role="textbox" aria-multiline="true" data-placeholder="${escapeAttribute(this.options.placeholder)}"></div>`;
     this.mount.appendChild(this.host);
     this.toolbar = this.host.querySelector(".wysime-toolbar");
     this.editor = this.host.querySelector(".wysime-editor");
@@ -220,8 +229,16 @@ export class WYSIMEditor {
       this.sync();
     }, { signal });
 
-    this.editor.addEventListener("click", (event) => {
+    this.editor.addEventListener("click", async (event) => {
       if (this.options.readOnly) return;
+      const mathEdit = event.target.closest("[data-wysime-edit-math]");
+      if (mathEdit) {
+        event.preventDefault();
+        event.stopPropagation();
+        const mathNode = mathEdit.closest('[data-wysime-kind="math"]');
+        if (mathNode && this.editor.contains(mathNode)) await this.editMathNode(mathNode);
+        return;
+      }
       const table = event.target.closest("table");
       if (table && this.editor.contains(table)) {
         const cell = event.target.closest("th,td");
@@ -387,6 +404,28 @@ export class WYSIMEditor {
       return;
     }
 
+    if (action === "equation" && this.options.equations) {
+      const result = await (this.options.equationDialog || openEquationDialog)(selection, { locale: this.options.locale, visualRuntime: this.options.visualRuntime });
+      if (result?.latex) {
+        const html = createMathPlaceholder(result.latex, result.display !== false);
+        this.insertHtml(html, actionRange);
+        await this.hydrateVisuals();
+      }
+      return;
+    }
+
+    if (action === "visual" && (this.options.charts || this.options.diagrams)) {
+      const result = await (this.options.visualDialog || openVisualDialog)({ locale: this.options.locale, visualRuntime: this.options.visualRuntime });
+      if (result?.kind === "chart" && this.options.charts && result.source) {
+        this.insertHtml(createVisualPlaceholder("chart", result.source), actionRange);
+        await this.hydrateVisuals();
+      } else if (result?.kind === "mermaid" && this.options.diagrams && result.source) {
+        this.insertHtml(createVisualPlaceholder("mermaid", result.source), actionRange);
+        await this.hydrateVisuals();
+      }
+      return;
+    }
+
     if (action === "task") {
       this.savedRange = insertTask(this.editor, actionRange, selection || this.messages.placeholders.task);
       this.sync();
@@ -426,6 +465,24 @@ export class WYSIMEditor {
       const result = await (this.options.stepsDialog || openStepsDialog)(selection, { locale: this.options.locale });
       if (result?.length) this.insertHtml(stepsHtml(result), actionRange);
     }
+  }
+
+  async editMathNode(mathNode) {
+    if (!mathNode || this.options.readOnly || !this.options.equations) return;
+    const source = decodeVisualSource(mathNode.dataset.wysimeSource || "");
+    const display = mathNode.dataset.wysimeDisplay === "block";
+    const result = await (this.options.equationDialog || openEquationDialog)(source, {
+      locale: this.options.locale,
+      visualRuntime: this.options.visualRuntime,
+      display,
+      mode: "edit"
+    });
+    if (!result?.latex) return;
+    mathNode.dataset.wysimeSource = encodeVisualSource(result.latex);
+    mathNode.dataset.wysimeDisplay = result.display === false ? "inline" : "block";
+    mathNode.classList.toggle("wysime-math-block", result.display !== false);
+    await this.hydrateVisuals();
+    this.sync();
   }
 
   async uploadAndInsertImage(file) {
@@ -475,7 +532,29 @@ export class WYSIMEditor {
   }
 
   insertMarkdown(markdown) {
-    return this.insertHtml(markdownToHtml(markdown, { sanitizerOptions: this.options.sanitizeOptions }));
+    const result = this.insertHtml(markdownToHtml(markdown, this.renderOptions()));
+    this.hydrateVisuals();
+    return result;
+  }
+
+  renderOptions() {
+    return {
+      sanitizerOptions: this.options.sanitizeOptions,
+      equations: this.options.equations,
+      charts: this.options.charts,
+      diagrams: this.options.diagrams
+    };
+  }
+
+  async hydrateVisuals() {
+    await hydrateVisuals(this.editor, {
+      equations: this.options.equations,
+      charts: this.options.charts,
+      diagrams: this.options.diagrams,
+      visualRuntime: this.options.visualRuntime,
+      locale: this.options.locale
+    });
+    return this;
   }
 
   saveSelection() {
@@ -702,7 +781,8 @@ export class WYSIMEditor {
     if (this.destroyed || this.syncing) return this;
     this.closeTableControls();
     const markdown = this.source ? this.source.value : this._value || "";
-    this.editor.innerHTML = markdownToHtml(markdown, { sanitizerOptions: this.options.sanitizeOptions }) || "<p><br></p>";
+    this.editor.innerHTML = markdownToHtml(markdown, this.renderOptions()) || "<p><br></p>";
+    this.hydrateVisuals();
     this.editor.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => checkbox.removeAttribute("disabled"));
     return this;
   }
@@ -734,14 +814,17 @@ export class WYSIMEditor {
     const value = String(markdown ?? "");
     this._value = value;
     if (this.source) this.source.value = value;
-    this.editor.innerHTML = markdownToHtml(value, { sanitizerOptions: this.options.sanitizeOptions }) || "<p><br></p>";
+    this.editor.innerHTML = markdownToHtml(value, this.renderOptions()) || "<p><br></p>";
+    this.hydrateVisuals();
     this.editor.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => checkbox.removeAttribute("disabled"));
     if (emit) this.sync({ emit: true });
     return this;
   }
 
   getHtml() {
-    return sanitizeHtml(this.editor.innerHTML, this.options.sanitizeOptions);
+    const clone = this.editor.cloneNode(true);
+    clone.querySelectorAll("[data-wysime-ui]").forEach((node) => node.remove());
+    return sanitizeHtml(clone.innerHTML, this.options.sanitizeOptions);
   }
 
   focus() {

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 import { sanitizeHtml } from "./sanitize.js";
+import { decodeVisualSource } from "./visuals.js";
 
 function normalizeText(value) {
   return String(value ?? "").replace(/\u00a0/g, " ");
@@ -27,6 +28,10 @@ function inlineNode(node, context = {}) {
   if (node.nodeType !== Node.ELEMENT_NODE) return "";
 
   const tag = node.tagName;
+  if (node.getAttribute?.("data-wysime-kind") === "math") {
+    const source = decodeVisualSource(node.getAttribute("data-wysime-source") || "");
+    return node.getAttribute("data-wysime-display") === "block" ? "$$\n" + source + "\n$$" : "$" + source + "$";
+  }
   const content = inlineChildren(node, context);
 
   if (tag === "STRONG" || tag === "B") return `**${content}**`;
@@ -143,6 +148,15 @@ function blockNode(node) {
   if (node.nodeType !== Node.ELEMENT_NODE) return "";
 
   const tag = node.tagName;
+  const visualKind = node.getAttribute?.("data-wysime-kind");
+  if (visualKind === "math") {
+    const source = decodeVisualSource(node.getAttribute("data-wysime-source") || "");
+    return node.getAttribute("data-wysime-display") === "block" ? "$$\n" + source + "\n$$" : "$" + source + "$";
+  }
+  if (visualKind === "chart" || visualKind === "mermaid") {
+    const source = decodeVisualSource(node.getAttribute("data-wysime-source") || "");
+    return "```" + visualKind + "\n" + source + "\n```";
+  }
   const align = String(node.style?.textAlign || "").toLowerCase();
 
   if (/^H[1-4]$/.test(tag)) {

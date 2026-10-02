@@ -180,3 +180,66 @@ The following are not guaranteed in 0.1.x:
 - arbitrary inline CSS;
 - automatic heading anchors;
 - full CommonMark/GFM edge-case compatibility.
+
+## Equations (v0.2.0)
+
+Inline equations use dollar delimiters:
+
+```markdown
+La relation est $E = mc^2$.
+```
+
+Block equations use double-dollar delimiters on dedicated lines:
+
+```markdown
+$$
+x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
+$$
+```
+
+The stored source is LaTeX. WYSIME uses MathLive for visual input and KaTeX for display when `equations` is enabled.
+
+## Data charts (v0.2.0)
+
+WYSIME data charts use a fenced `chart` block. The first line defines the chart type and an optional quoted title. Options such as `unit`, `x`, `y` and `legend` may follow.
+
+````markdown
+```chart
+bar "Chiffre d'affaires"
+unit: €
+Janvier: 12000
+Février: 15500
+Mars: 18200
+```
+````
+
+Supported types: `bar`, `line`, `area`, `pie`, `scatter`.
+
+Scatter data uses one numeric `x,y` pair per line:
+
+````markdown
+```chart
+scatter "Mesures"
+x: Temps
+y: Valeur
+1,2
+2,4
+3,5
+```
+````
+
+The `chart` DSL is intentionally independent from the Vega-Lite JSON schema. WYSIME converts it to Vega-Lite at render time so stored Markdown remains compact and readable.
+
+## Mermaid diagrams (v0.2.0)
+
+Standard Mermaid source is kept unchanged inside a fenced block:
+
+````markdown
+```mermaid
+flowchart LR
+  A[Début] --> B[Étape]
+  B --> C[Fin]
+```
+````
+
+WYSIME renders the block using Mermaid with strict security mode.

@@ -17,7 +17,8 @@ const DEFAULT_ALLOWED_TAGS = [
 
 const DEFAULT_ALLOWED_ATTR = [
   "href", "title", "target", "rel", "src", "alt", "class", "style", "type", "checked", "disabled",
-  "role", "aria-label", "aria-multiline", "contenteditable", "data-callout", "data-title"
+  "role", "aria-label", "aria-multiline", "contenteditable", "data-callout", "data-title",
+  "data-wysime-kind", "data-wysime-source", "data-wysime-display"
 ];
 
 export const DEFAULT_SANITIZE_OPTIONS = Object.freeze({

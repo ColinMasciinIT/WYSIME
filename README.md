@@ -24,7 +24,7 @@ The standalone library is deliberately host-agnostic: it contains no application
 
 ## Status
 
-`0.1.1` is a patch release of WYSIME that adds a toolbar action for inspecting the generated Markdown in a dedicated modal.
+`0.2.4` refines the MathLive equation workflow: the equation dialog stays centered while the virtual keyboard is hidden, then automatically docks just above the keyboard when it is shown. The docking offset follows the keyboard's real height, so no fixed white spacer is reserved above it. Chart categories continue to preserve the exact order written in the data input.
 
 The editor is usable, but the API and Markdown serialization rules may still evolve during the `0.x` series.
 
@@ -47,6 +47,9 @@ The editor is usable, but the API and Markdown serialization rules may still evo
 - Read-only mode.
 - Responsive toolbar.
 - Dedicated toolbar button to inspect the generated Markdown in a modal.
+- MathLive equation input with LaTeX Markdown storage and KaTeX rendering.
+- Vega-Lite/Vega-Embed data charts through a compact human-readable `chart` block.
+- Mermaid diagrams with a dedicated visual insertion workflow.
 - French and English interface through `locale: "fr" | "en"`.
 - Bilingual French/English demo.
 - No hard-coded backend.
@@ -152,6 +155,10 @@ new WYSIMEditor("#content", {
 | --- | --- | --- | --- |
 | `locale` | `"fr" \| "en"` | `"fr"` | Built-in editor/dialog language |
 | `images` | boolean | `true` | Enable image insertion |
+| `equations` | boolean | `true` | Enable MathLive/KaTeX equations |
+| `charts` | boolean | `true` | Enable Vega-Lite data charts |
+| `diagrams` | boolean | `true` | Enable Mermaid diagrams |
+| `visualRuntime` | object | pinned jsDelivr URLs | Override MathLive, KaTeX, Vega-Embed and Mermaid runtime URLs |
 | `uploadImage` | function | `null` | Host upload adapter |
 | `maxImageBytes` | number | `8 * 1024 * 1024` | Client-side image size limit |
 | `acceptedImageTypes` | string[] | PNG/JPEG/GIF/WebP | Allowed client MIME types |
@@ -258,7 +265,7 @@ dist/
 └── wysime.css
 ```
 
-DOMPurify remains an explicit runtime dependency and is externalized from the library bundle.
+DOMPurify remains an explicit npm runtime dependency and is externalized from the library bundle. MathLive, KaTeX, Vega-Embed and Mermaid are visual runtimes loaded on demand from pinned URLs (or from host-provided `visualRuntime` URLs).
 
 ## Tests
 
@@ -311,7 +318,7 @@ The goal is to keep the editing layer inspectable and lightweight while retainin
 
 HTML sanitization is security-sensitive. Instead of reimplementing an HTML sanitizer, WYSIME isolates that responsibility in DOMPurify. See [`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md).
 
-## Known limitations in 0.1.1
+## Known limitations in 0.2.x
 
 - The parser targets the documented editorial subset, not every CommonMark/GFM edge case.
 - Complex nested inline formatting may normalize during a WYSIWYG round trip.
@@ -319,6 +326,8 @@ HTML sanitization is security-sensitive. Instead of reimplementing an HTML sanit
 - Complex HTML tables may be preserved as controlled HTML.
 - Collaborative editing, comments, track changes and real-time cursors are out of scope.
 - Syntax highlighting is not bundled; code blocks expose `language-*` classes for an external highlighter.
+- The default visual runtimes require network access to jsDelivr; self-host the pinned runtime files through `visualRuntime` for offline or restrictive-CSP deployments.
+- The v0.2.x `chart` DSL intentionally focuses on common single-series visualizations; advanced Vega-Lite specifications are not exposed directly.
 
 ## Author
 
@@ -331,3 +340,77 @@ See [`AUTHORS.md`](./AUTHORS.md).
 MIT License - Copyright (c) 2026 Colin Timaxian.
 
 Third-party licenses are documented in [`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md).
+
+## Equations, charts and diagrams (v0.2.0)
+
+WYSIME 0.2.0 adds visual scientific and data content while keeping Markdown as the canonical format.
+
+### Equations
+
+Equations are enabled by default. WYSIME uses **MathLive** for visual input, stores the result as LaTeX Markdown, then uses **KaTeX** for rendering:
+
+```markdown
+Inline: $E = mc^2$
+
+$$
+x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
+$$
+```
+
+Rendered block equations expose a small pencil control in editable mode. It reopens the MathLive dialog with the existing LaTeX and block/inline mode preloaded. The control is hidden in read-only mode and is never included in Markdown or `getHtml()` output.
+
+Disable the feature with:
+
+```javascript
+new WYSIMEditor("#content", { equations: false });
+```
+
+### Data charts
+
+Data charts are enabled by default and are rendered through **Vega-Lite / Vega-Embed**. WYSIME deliberately stores a small human-readable `chart` DSL instead of a Vega JSON object:
+
+````markdown
+```chart
+bar "Revenue"
+unit: €
+January: 12000
+February: 15500
+March: 18200
+```
+````
+
+Supported chart types in 0.2.0 are `bar`, `line`, `area`, `pie` and `scatter`.
+
+Disable them with `charts: false`.
+
+### Diagrams
+
+Mermaid blocks are rendered visually and remain standard Mermaid source in Markdown:
+
+````markdown
+```mermaid
+flowchart LR
+  A[Start] --> B[Review]
+  B --> C[Publish]
+```
+````
+
+Disable them with `diagrams: false`.
+
+### Visual runtime loading
+
+To keep the core package lightweight and framework-free, WYSIME loads the visual runtimes on demand from pinned jsDelivr ESM URLs. Applications with a strict CSP, offline requirements or an internal artifact registry can override every URL:
+
+```javascript
+new WYSIMEditor("#content", {
+  visualRuntime: {
+    mathlive: "/vendor/mathlive/mathlive.mjs",
+    katex: "/vendor/katex/katex.mjs",
+    katexCss: "/vendor/katex/katex.min.css",
+    vegaEmbed: "/vendor/vega-embed/index.mjs",
+    mermaid: "/vendor/mermaid/mermaid.esm.mjs"
+  }
+});
+```
+
+No user-authored JavaScript is executed. Mermaid is initialized with `securityLevel: "strict"`, KaTeX runs with `trust: false`, and visual definitions are preserved in sanitized `data-wysime-*` metadata for lossless Markdown round-trips.

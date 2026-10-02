@@ -8,6 +8,7 @@ import "./styles.css";
 export { WYSIMEditor } from "./editor.js";
 export { markdownToHtml, renderInline, stripFrontMatter } from "./markdown.js";
 export { htmlToMarkdown } from "./html-to-markdown.js";
+export { hydrateVisuals, parseNaturalChart, DEFAULT_VISUAL_RUNTIME } from "./visuals.js";
 export {
   sanitizeHtml,
   escapeHtml,
