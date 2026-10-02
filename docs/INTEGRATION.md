@@ -149,3 +149,46 @@ Override CSS variables on a container:
 ```
 
 No JavaScript change is required.
+
+## Equations, charts and diagrams
+
+All three visual capabilities are enabled by default:
+
+```javascript
+new WYSIMEditor("#description", {
+  equations: true,
+  charts: true,
+  diagrams: true
+});
+```
+
+Set a capability to `false` to remove its toolbar action and keep the corresponding Markdown as ordinary source/code during rendering.
+
+The editor loads MathLive, KaTeX, Vega-Embed and Mermaid only when matching content is present. Default runtime URLs are version-pinned jsDelivr ESM modules. For offline deployments, strict Content-Security-Policy environments or private registries, override them:
+
+Since v0.2.4, the equation dialog is centered normally whenever the MathLive virtual keyboard is hidden. When the keyboard becomes visible, WYSIME listens to MathLive keyboard visibility and geometry events, measures the real keyboard height, and docks the equation dialog immediately above it. The keyboard host remains a direct child of the native `<dialog>` only to stay in the browser top layer and remain clickable above the modal backdrop; it is transparent and does not reserve a white spacer in the dialog layout. WYSIME keeps manual keyboard policy and explicitly opens the keyboard when the math field receives focus.
+
+```javascript
+new WYSIMEditor("#description", {
+  visualRuntime: {
+    mathlive: "/vendor/mathlive/mathlive.mjs",
+    katex: "/vendor/katex/katex.mjs",
+    katexCss: "/vendor/katex/katex.min.css",
+    vegaEmbed: "/vendor/vega-embed/index.mjs",
+    mermaid: "/vendor/mermaid/mermaid.esm.mjs"
+  }
+});
+```
+
+Chart categories preserve the exact order written in the `chart` data block. WYSIME disables Vega-Lite's default ascending sort for categorical channels; line/area paths and pie sectors also keep source order.
+
+For standalone Markdown rendering, `markdownToHtml()` creates safe visual placeholders. Call `hydrateVisuals()` after inserting that HTML into the DOM:
+
+```javascript
+import { markdownToHtml, hydrateVisuals } from "wysime";
+
+container.innerHTML = markdownToHtml(markdown);
+await hydrateVisuals(container);
+```
+
+The visual DOM is disposable. The original LaTeX, chart DSL or Mermaid source is stored in encoded metadata and is what `htmlToMarkdown()` serializes back to Markdown.

@@ -17,7 +17,7 @@ function closeNativeDialog(dialog) {
   dialog.remove();
 }
 
-export function openDialog({ title, body, confirmLabel = "Insert", cancelLabel = "Cancel", className = "", onMount = null, locale = "fr" }) {
+export function openDialog({ title, body, confirmLabel = "Insert", cancelLabel = "Cancel", className = "", onMount = null, onClose = null, locale = "fr" }) {
   const messages = getMessages(locale);
   return new Promise((resolve) => {
     const dialog = document.createElement("dialog");
@@ -37,8 +37,12 @@ export function openDialog({ title, body, confirmLabel = "Insert", cancelLabel =
       </form>`;
 
     const finish = (value) => {
-      closeNativeDialog(dialog);
-      resolve(value);
+      try {
+        if (typeof onClose === "function") onClose(dialog, value);
+      } finally {
+        closeNativeDialog(dialog);
+        resolve(value);
+      }
     };
 
     dialog.querySelector(".wysime-dialog-close").addEventListener("click", () => finish(null));
@@ -276,4 +280,247 @@ export async function openImagePropertiesDialog(image, { locale = "fr" } = {}) {
     alt: dialog.querySelector("[data-alt]").value.trim() || messages.image.defaultAlt,
     width: choice === "custom" ? dialog.querySelector("[data-custom-width]").value.trim() : choice
   };
+}
+
+export async function openEquationDialog(selection = "", { locale = "fr", visualRuntime = {}, display = true, mode = "insert" } = {}) {
+  const messages = getMessages(locale);
+  let mathKeyboard = null;
+  let previousKeyboardContainer = null;
+  const keyboardCleanup = [];
+  const dialog = await openDialog({
+    title: mode === "edit" ? messages.equation.editTitle : messages.equation.title,
+    confirmLabel: mode === "edit" ? messages.common.apply : messages.common.insert,
+    cancelLabel: messages.common.cancel,
+    className: "wysime-equation-dialog",
+    locale,
+    body: `
+      <div class="wysime-form-grid">
+        <label class="wysime-field-wide">${escapeHtml(messages.equation.expression)}
+          <div class="wysime-math-field-wrap" data-math-field-wrap>
+            <textarea data-latex-fallback rows="3" spellcheck="false">${escapeHtml(selection || "x=\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}")}</textarea>
+          </div>
+        </label>
+        <label class="wysime-check wysime-field-wide"><input data-display-mode type="checkbox"${display !== false ? " checked" : ""}> ${escapeHtml(messages.equation.displayMode)}</label>
+        <p class="wysime-dialog-help wysime-field-wide">${escapeHtml(messages.equation.help)}</p>
+      </div>`,
+    async onMount(currentDialog) {
+      try {
+        const { ensureMathLiveModule } = await import("./visuals.js");
+        const mathliveModule = await ensureMathLiveModule(visualRuntime);
+        const wrap = currentDialog.querySelector("[data-math-field-wrap]");
+        const fallback = currentDialog.querySelector("[data-latex-fallback]");
+        if (!wrap || !fallback || !customElements.get("math-field")) return;
+
+        const keyboardHost = document.createElement("div");
+        keyboardHost.className = "wysime-math-keyboard-host";
+        keyboardHost.dataset.mathKeyboardHost = "";
+        keyboardHost.setAttribute("aria-hidden", "true");
+        const keyboardMount = document.createElement("div");
+        keyboardMount.className = "wysime-math-keyboard-mount";
+        keyboardMount.dataset.mathKeyboardMount = "";
+        keyboardHost.appendChild(keyboardMount);
+        currentDialog.appendChild(keyboardHost);
+        const field = document.createElement("math-field");
+        field.className = "wysime-math-field";
+        field.value = fallback.value;
+        field.setAttribute("aria-label", messages.equation.expression);
+        field.dataset.mathField = "";
+        wrap.replaceChildren(field, fallback);
+        fallback.hidden = true;
+
+        mathKeyboard = mathliveModule?.mathVirtualKeyboard || globalThis.mathVirtualKeyboard || null;
+        if (mathKeyboard && keyboardHost) {
+          try { previousKeyboardContainer = mathKeyboard.container || document.body; } catch { previousKeyboardContainer = document.body; }
+          mathKeyboard.container = keyboardMount;
+          field.mathVirtualKeyboardPolicy = "manual";
+
+          const getKeyboardHeight = (event) => {
+            const rect = event?.detail?.boundingRect || mathKeyboard?.boundingRect;
+            const height = Number(rect?.height || 0);
+            return Number.isFinite(height) && height > 0 ? Math.ceil(height) : 0;
+          };
+
+          const setKeyboardState = (visible, height = 0) => {
+            if (!currentDialog.isConnected) return;
+            if (height > 0) currentDialog.style.setProperty("--wysime-math-keyboard-height", `${height}px`);
+            currentDialog.classList.toggle("wysime-equation-dialog-with-keyboard", Boolean(visible));
+            keyboardHost.classList.toggle("wysime-math-keyboard-visible", Boolean(visible));
+            keyboardHost.setAttribute("aria-hidden", visible ? "false" : "true");
+          };
+
+          const onKeyboardToggle = (event) => {
+            const visible = typeof event?.detail?.visible === "boolean"
+              ? event.detail.visible
+              : Boolean(mathKeyboard.visible);
+            setKeyboardState(visible, getKeyboardHeight(event));
+          };
+          const onKeyboardGeometry = (event) => {
+            const height = getKeyboardHeight(event);
+            const visible = mathKeyboard.visible !== false && (height > 0 || currentDialog.classList.contains("wysime-equation-dialog-with-keyboard"));
+            if (visible) setKeyboardState(true, height);
+          };
+
+          if (typeof mathKeyboard.addEventListener === "function") {
+            mathKeyboard.addEventListener("before-virtual-keyboard-toggle", onKeyboardToggle);
+            mathKeyboard.addEventListener("virtual-keyboard-toggle", onKeyboardToggle);
+            mathKeyboard.addEventListener("geometrychange", onKeyboardGeometry);
+            keyboardCleanup.push(() => mathKeyboard.removeEventListener?.("before-virtual-keyboard-toggle", onKeyboardToggle));
+            keyboardCleanup.push(() => mathKeyboard.removeEventListener?.("virtual-keyboard-toggle", onKeyboardToggle));
+            keyboardCleanup.push(() => mathKeyboard.removeEventListener?.("geometrychange", onKeyboardGeometry));
+          }
+
+          const showKeyboard = () => {
+            setKeyboardState(true, getKeyboardHeight());
+            try {
+              if (typeof mathKeyboard.show === "function") mathKeyboard.show();
+              else mathKeyboard.visible = true;
+            } catch {}
+            queueMicrotask(() => {
+              const height = getKeyboardHeight();
+              if (height > 0 || mathKeyboard.visible === true) setKeyboardState(true, height);
+            });
+          };
+          field.addEventListener("focusin", showKeyboard);
+          keyboardCleanup.push(() => field.removeEventListener("focusin", showKeyboard));
+          queueMicrotask(() => {
+            try { field.focus(); } catch {}
+            showKeyboard();
+          });
+        }
+      } catch {
+        // The LaTeX textarea remains usable when the optional runtime cannot load.
+      }
+    },
+    onClose(currentDialog) {
+      while (keyboardCleanup.length) {
+        try { keyboardCleanup.pop()?.(); } catch {}
+      }
+      currentDialog.classList.remove("wysime-equation-dialog-with-keyboard");
+      currentDialog.style.removeProperty("--wysime-math-keyboard-height");
+      if (!mathKeyboard) return;
+      try { mathKeyboard.hide?.(); } catch {}
+      try { mathKeyboard.container = previousKeyboardContainer?.isConnected ? previousKeyboardContainer : document.body; } catch {}
+    }
+  });
+  if (!dialog) return null;
+  const field = dialog.querySelector("math-field[data-math-field]");
+  const fallback = dialog.querySelector("[data-latex-fallback]");
+  const latex = String(field?.value || fallback?.value || "").trim();
+  return { latex, display: dialog.querySelector("[data-display-mode]")?.checked !== false };
+}
+
+export async function openVisualDialog({ locale = "fr", visualRuntime = {} } = {}) {
+  const messages = getMessages(locale);
+  const dialog = await openDialog({
+    title: messages.visual.title,
+    confirmLabel: messages.common.insert,
+    cancelLabel: messages.common.cancel,
+    className: "wysime-visual-dialog",
+    locale,
+    body: `
+      <div class="wysime-form-grid">
+        <label>${escapeHtml(messages.visual.kind)}
+          <select data-visual-kind>
+            <option value="chart">${escapeHtml(messages.visual.chart)}</option>
+            <option value="mermaid">${escapeHtml(messages.visual.diagram)}</option>
+          </select>
+        </label>
+        <div class="wysime-field-wide" data-chart-fields>
+          <div class="wysime-form-grid">
+            <label>${escapeHtml(messages.visual.chartType)}
+              <select data-chart-type>
+                <option value="bar">${escapeHtml(messages.visual.bar)}</option>
+                <option value="line">${escapeHtml(messages.visual.line)}</option>
+                <option value="area">${escapeHtml(messages.visual.area)}</option>
+                <option value="pie">${escapeHtml(messages.visual.pie)}</option>
+                <option value="scatter">${escapeHtml(messages.visual.scatter)}</option>
+              </select>
+            </label>
+            <label>${escapeHtml(messages.visual.unit)}<input data-chart-unit type="text" placeholder="€"></label>
+            <label class="wysime-field-wide">${escapeHtml(messages.visual.chartTitle)}<input data-chart-title type="text" placeholder="${escapeAttribute(messages.visual.chartTitlePlaceholder)}"></label>
+            <label class="wysime-field-wide">${escapeHtml(messages.visual.data)}
+              <textarea data-chart-data rows="7" spellcheck="false" placeholder="Janvier: 12000\nFévrier: 15500\nMars: 18200">Janvier: 12000\nFévrier: 15500\nMars: 18200</textarea>
+            </label>
+          </div>
+        </div>
+        <div class="wysime-field-wide wysime-hidden" data-mermaid-fields>
+          <label>${escapeHtml(messages.visual.diagramType)}
+            <select data-diagram-type>
+              <option value="flowchart">Flowchart</option>
+              <option value="sequenceDiagram">Sequence diagram</option>
+              <option value="classDiagram">Class diagram</option>
+              <option value="stateDiagram-v2">State diagram</option>
+              <option value="erDiagram">ER diagram</option>
+              <option value="gantt">Gantt</option>
+            </select>
+          </label>
+          <label>${escapeHtml(messages.visual.definition)}
+            <textarea data-mermaid-source rows="10" spellcheck="false">flowchart LR\n  A[Début] --> B[Étape]\n  B --> C[Fin]</textarea>
+          </label>
+        </div>
+        <div class="wysime-field-wide wysime-visual-dialog-preview" data-visual-preview aria-live="polite"></div>
+        <p class="wysime-dialog-help wysime-field-wide">${escapeHtml(messages.visual.help)}</p>
+      </div>`,
+    async onMount(currentDialog) {
+      const kind = currentDialog.querySelector("[data-visual-kind]");
+      const chartFields = currentDialog.querySelector("[data-chart-fields]");
+      const mermaidFields = currentDialog.querySelector("[data-mermaid-fields]");
+      const source = currentDialog.querySelector("[data-mermaid-source]");
+      const diagramType = currentDialog.querySelector("[data-diagram-type]");
+      const preview = currentDialog.querySelector("[data-visual-preview]");
+      let visualHelpers = null;
+      try { visualHelpers = await import("./visuals.js"); } catch {}
+      const chartSource = () => {
+        const type = currentDialog.querySelector("[data-chart-type]").value;
+        const title = currentDialog.querySelector("[data-chart-title]").value.trim();
+        const unit = currentDialog.querySelector("[data-chart-unit]").value.trim();
+        const data = currentDialog.querySelector("[data-chart-data]").value.trim();
+        return [title ? type + ' "' + title.replace(/"/g, "'") + '"' : type, unit ? "unit: " + unit : "", data].filter(Boolean).join("\n");
+      };
+      let previewTimer = null;
+      const renderPreview = () => {
+        clearTimeout(previewTimer);
+        previewTimer = setTimeout(async () => {
+          if (!preview || !visualHelpers) return;
+          const visualKind = kind.value === "chart" ? "chart" : "mermaid";
+          const visualSource = visualKind === "chart" ? chartSource() : source.value.trim();
+          preview.innerHTML = visualHelpers.createVisualPlaceholder(visualKind, visualSource);
+          await visualHelpers.hydrateVisuals(preview, { charts: true, diagrams: true, equations: false, visualRuntime });
+        }, 120);
+      };
+      const update = () => {
+        const isChart = kind.value === "chart";
+        chartFields.classList.toggle("wysime-hidden", !isChart);
+        mermaidFields.classList.toggle("wysime-hidden", isChart);
+        renderPreview();
+      };
+      kind.addEventListener("change", update);
+      currentDialog.querySelectorAll("[data-chart-type],[data-chart-title],[data-chart-unit],[data-chart-data],[data-mermaid-source]").forEach((field) => {
+        field.addEventListener("input", renderPreview);
+        field.addEventListener("change", renderPreview);
+      });
+      diagramType.addEventListener("change", () => {
+        const templates = {
+          flowchart: "flowchart LR\n  A[Début] --> B[Étape]\n  B --> C[Fin]",
+          sequenceDiagram: "sequenceDiagram\n  Alice->>Bob: Bonjour\n  Bob-->>Alice: Réponse",
+          classDiagram: "classDiagram\n  class Projet\n  Projet : +String nom",
+          "stateDiagram-v2": "stateDiagram-v2\n  [*] --> Brouillon\n  Brouillon --> Publié",
+          erDiagram: "erDiagram\n  CLIENT ||--o{ COMMANDE : passe",
+          gantt: "gantt\n  title Planning\n  dateFormat YYYY-MM-DD\n  section Projet\n  Conception :2026-10-01, 5d"
+        };
+        source.value = templates[diagramType.value] || source.value;
+        renderPreview();
+      });
+      update();
+    }
+  });
+  if (!dialog) return null;
+  const kind = dialog.querySelector("[data-visual-kind]").value;
+  if (kind === "mermaid") return { kind, source: dialog.querySelector("[data-mermaid-source]").value.trim() };
+  const type = dialog.querySelector("[data-chart-type]").value;
+  const title = dialog.querySelector("[data-chart-title]").value.trim();
+  const unit = dialog.querySelector("[data-chart-unit]").value.trim();
+  const data = dialog.querySelector("[data-chart-data]").value.trim();
+  const first = title ? `${type} "${title.replace(/"/g, "'")}"` : type;
+  return { kind, source: [first, unit ? `unit: ${unit}` : "", data].filter(Boolean).join("\n") };
 }

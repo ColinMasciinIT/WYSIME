@@ -1,6 +1,6 @@
 {
   "name": "wysime",
-  "version": "0.1.1",
+  "version": "0.2.4",
   "description": "WYSIME (What You See Is Markdown Editor) - a lightweight, framework-free Markdown WYSIWYG editor written in Vanilla JavaScript.",
   "type": "module",
   "main": "./dist/wysime.umd.cjs",
@@ -50,7 +50,14 @@
     "markdown-wysiwyg",
     "rich-text-editor",
     "browser",
-    "javascript"
+    "javascript",
+    "latex",
+    "katex",
+    "mathlive",
+    "vega-lite",
+    "mermaid",
+    "charts",
+    "diagrams"
   ],
   "author": "Colin Timaxian",
   "license": "MIT",

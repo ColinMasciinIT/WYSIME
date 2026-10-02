@@ -628,3 +628,254 @@
     grid-column: auto;
   }
 }
+
+/* v0.2.0 - equations, data charts and diagrams */
+.wysime-math {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: middle;
+  cursor: default;
+}
+
+.wysime-math-block {
+  display: block;
+  overflow-x: auto;
+  padding: 10px 12px;
+  margin: 0 0 1rem;
+  text-align: center;
+  border: 1px solid var(--wysime-border);
+  border-radius: 8px;
+  background: var(--wysime-surface);
+}
+
+.wysime-visual {
+  min-height: 120px;
+  margin: 0 0 1rem;
+  padding: 12px;
+  overflow: auto;
+  border: 1px solid var(--wysime-border);
+  border-radius: 8px;
+  background: var(--wysime-bg);
+}
+
+.wysime-visual svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.wysime-visual-loading,
+.wysime-visual-error-message {
+  display: grid;
+  min-height: 96px;
+  place-items: center;
+  color: var(--wysime-muted);
+  font-size: 0.92rem;
+}
+
+.wysime-visual-error {
+  border-color: color-mix(in srgb, var(--wysime-danger) 50%, var(--wysime-border));
+}
+
+.wysime-visual-error-message {
+  color: var(--wysime-danger);
+  white-space: pre-wrap;
+}
+
+.wysime-math-field-wrap,
+.wysime-math-field,
+.wysime-math-field-wrap textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.wysime-math-field {
+  min-height: 64px;
+  padding: 10px;
+  border: 1px solid var(--wysime-border);
+  border-radius: 7px;
+  background: var(--wysime-bg);
+  font-size: 1.15rem;
+}
+
+.wysime-visual-dialog-preview {
+  min-height: 160px;
+  padding: 10px;
+  border: 1px dashed var(--wysime-border-strong);
+  border-radius: 8px;
+  background: var(--wysime-surface);
+}
+
+.wysime-visual-dialog-preview:empty::before {
+  content: "Preview";
+  display: grid;
+  min-height: 138px;
+  place-items: center;
+  color: var(--wysime-muted);
+}
+
+/* v0.2.1+ - equation/chart dialog sizing and equation editing */
+.wysime-dialog.wysime-equation-dialog {
+  width: min(920px, calc(100vw - 24px));
+  max-height: min(900px, calc(100vh - 24px));
+}
+
+/* v0.2.4 - adaptive MathLive keyboard: centered dialog when hidden, docked just above it when visible */
+.wysime-dialog.wysime-equation-dialog-with-keyboard {
+  position: fixed;
+  top: auto;
+  right: 0;
+  bottom: calc(var(--wysime-math-keyboard-height, min(50vh, 420px)) + 12px);
+  left: 0;
+  margin: 0 auto;
+  max-height: calc(100vh - var(--wysime-math-keyboard-height, min(50vh, 420px)) - 24px);
+  overflow: hidden;
+}
+
+.wysime-equation-dialog-with-keyboard .wysime-dialog-card {
+  position: relative;
+  z-index: 2;
+  max-height: inherit;
+  overflow: hidden;
+  border-radius: inherit;
+  background: var(--wysime-bg);
+}
+
+.wysime-equation-dialog-with-keyboard .wysime-dialog-body {
+  min-height: 0;
+  overflow: auto;
+}
+
+.wysime-dialog.wysime-visual-dialog {
+  width: min(1040px, calc(100vw - 24px));
+  max-height: min(900px, calc(100vh - 24px));
+}
+
+.wysime-equation-dialog .wysime-dialog-card,
+.wysime-visual-dialog .wysime-dialog-card {
+  width: 100%;
+  min-width: 0;
+}
+
+.wysime-equation-dialog .wysime-dialog-body,
+.wysime-visual-dialog .wysime-dialog-body {
+  min-width: 0;
+}
+
+.wysime-equation-dialog .wysime-form-grid > *,
+.wysime-visual-dialog .wysime-form-grid > * {
+  min-width: 0;
+}
+
+.wysime-math-keyboard-host {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  display: none;
+  width: 100vw;
+  height: var(--wysime-math-keyboard-height, min(50vh, 420px));
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: visible;
+  padding: 0 0 env(safe-area-inset-bottom, 0);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  pointer-events: auto;
+  overscroll-behavior: contain;
+  --keyboard-zindex: 1;
+}
+
+.wysime-math-keyboard-host.wysime-math-keyboard-visible {
+  display: block;
+}
+
+.wysime-math-keyboard-mount {
+  position: relative;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0;
+  box-sizing: border-box;
+  background: transparent;
+}
+
+.wysime-math-keyboard-mount > * {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.wysime-math-block {
+  position: relative;
+  padding-right: 48px;
+}
+
+.wysime-math-edit {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-grid;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid var(--wysime-border);
+  border-radius: 7px;
+  background: var(--wysime-bg);
+  color: var(--wysime-muted);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.08);
+  cursor: pointer;
+}
+
+.wysime-math-edit:hover,
+.wysime-math-edit:focus-visible {
+  border-color: var(--wysime-border-strong);
+  background: var(--wysime-surface-hover);
+  color: var(--wysime-text);
+}
+
+.wysime-math-edit:focus-visible {
+  outline: 2px solid var(--wysime-accent);
+  outline-offset: 1px;
+}
+
+.wysime-math-edit svg {
+  width: 16px;
+  height: 16px;
+}
+
+.wysime-math:not(.wysime-math-block) > .wysime-math-edit,
+.wysime-readonly .wysime-math-edit {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .wysime-dialog.wysime-equation-dialog,
+  .wysime-dialog.wysime-visual-dialog {
+    width: calc(100vw - 16px);
+    max-height: calc(100vh - 16px);
+  }
+
+  .wysime-dialog.wysime-equation-dialog-with-keyboard {
+    bottom: calc(var(--wysime-math-keyboard-height, min(50vh, 420px)) + 8px);
+    max-height: calc(100vh - var(--wysime-math-keyboard-height, min(50vh, 420px)) - 16px);
+  }
+}
+
+@supports (height: 100dvh) {
+  .wysime-dialog.wysime-equation-dialog-with-keyboard {
+    bottom: calc(var(--wysime-math-keyboard-height, min(50dvh, 420px)) + 12px);
+    max-height: calc(100dvh - var(--wysime-math-keyboard-height, min(50dvh, 420px)) - 24px);
+  }
+
+  .wysime-math-keyboard-host {
+    height: var(--wysime-math-keyboard-height, min(50dvh, 420px));
+  }
+
+  @media (max-width: 720px) {
+    .wysime-dialog.wysime-equation-dialog-with-keyboard {
+      bottom: calc(var(--wysime-math-keyboard-height, min(50dvh, 420px)) + 8px);
+      max-height: calc(100dvh - var(--wysime-math-keyboard-height, min(50dvh, 420px)) - 16px);
+    }
+  }
+}

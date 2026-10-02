@@ -35,6 +35,32 @@ Le contenu enregistré reste du **Markdown lisible**, transportable et versionna
 | Markdown | Prêt | Format canonique |
 | Upload | Adaptateur | Fourni par l'hôte |
 
+## Équation
+
+La relation d’Einstein est $E = mc^2$.
+
+$$
+x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
+$$
+
+## Graphique
+
+\`\`\`chart
+bar "Chiffre d’affaires"
+unit: €
+Janvier: 12000
+Février: 15500
+Mars: 18200
+\`\`\`
+
+## Diagramme
+
+\`\`\`mermaid
+flowchart LR
+  A[Markdown] --> B[WYSIME]
+  B --> C[Rendu visuel]
+\`\`\`
+
 ## Exemple de code
 
 \`\`\`javascript
@@ -80,6 +106,32 @@ Stored content remains **readable Markdown** that can be moved between systems a
 | WYSIWYG | Ready | Framework-free |
 | Markdown | Ready | Canonical format |
 | Upload | Adapter | Provided by the host |
+
+## Equation
+
+Einstein’s relation is $E = mc^2$.
+
+$$
+x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
+$$
+
+## Chart
+
+\`\`\`chart
+bar "Revenue"
+unit: €
+January: 12000
+February: 15500
+March: 18200
+\`\`\`
+
+## Diagram
+
+\`\`\`mermaid
+flowchart LR
+  A[Markdown] --> B[WYSIME]
+  B --> C[Visual rendering]
+\`\`\`
 
 ## Code example
 
