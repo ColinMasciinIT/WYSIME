@@ -1,6 +1,6 @@
 {
   "name": "wysime",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "WYSIME (What You See Is Markdown Editor) - a lightweight, framework-free Markdown WYSIWYG editor written in Vanilla JavaScript.",
   "type": "module",
   "main": "./dist/wysime.umd.cjs",
